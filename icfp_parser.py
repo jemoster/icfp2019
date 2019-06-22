@@ -8,6 +8,9 @@ comma_prog = re.compile(r'^\s*,\s*')
 hash_prog = re.compile(r'^\s*#\s*')
 semicolon_prog = re.compile(r'^\s*;\s*')
 booster_prog = re.compile(r'^\s*([BFLXRC])\s*')
+act_b_prog = re.compile(r'^\s*B\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*')
+act_t_prog = re.compile(r'^\s*T\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*')
+valid_acts = 'WASDZEQFLCR'  # Doesn't include B action
 
 
 def parse_point(s):
@@ -21,6 +24,14 @@ def consume_hash(s):
     ''' Remove a preceding hash '''
     result = hash_prog.match(s)
     return s[result.span()[1]:]
+
+
+def maybe_consume_hash(s):
+    ''' Returns bool if we ate a hash, and remainder string '''
+    result = hash_prog.match(s)
+    if result is None:
+        return False, s
+    return True, s[result.span()[1]:]
 
 
 def maybe_consume_comma(s):
@@ -41,7 +52,6 @@ def maybe_consume_semicolon(s):
 
 def parse_map(s):
     ''' Return list of points, and remainder string '''
-    orig_s = s
     points = []
     try:
         parse_point(s)
@@ -70,7 +80,6 @@ def parse_booster_location(s):
 
 def parse_obstacles(s):
     ''' Return list of obstacles (which are lists of points) and remainder string '''
-    orig_s = s
     obstacles = []
     try:
         m, _ = parse_map(s)
@@ -86,7 +95,6 @@ def parse_obstacles(s):
 
 def parse_boosters(s):
     ''' Return list of (booster_code, location point) and remainder string '''
-    orig_s = s
     boosters = []
     try:
         parse_booster_location(s)
@@ -111,6 +119,57 @@ def parse_task(s):
     s = consume_hash(s)
     b, s = parse_boosters(s)
     return (m, p, o, b), s
+
+def parse_action(s):
+    ''' Return next action and remainder string '''
+    s = re.sub('^\s+', '', s)
+    if not s:
+        raise AttributeError('out of string')
+    c = s[0]
+    if c in valid_acts:
+        return c, s[1:]
+
+    result = act_b_prog.match(s)
+    if result is not None:
+        x, y = result.groups()
+        return ('B', (int(x), int(y))), s[result.span()[1]:]
+
+    result = act_t_prog.match(s)
+    if result is not None:
+        x, y = result.groups()
+        return ('T', (int(x), int(y))), s[result.span()[1]:]
+
+    raise AttributeError('No action here')
+
+
+def parse_actions(s):
+    ''' Return a list of actions, and remainder string '''
+    s = re.sub(r'\s', '', s)
+    actions = []
+    is_another_action = True
+    while is_another_action:
+        try:
+            a, s = parse_action(s)
+            actions.append(a)
+        except AttributeError:
+            break
+    return actions, s
+
+
+def parse_solution(s):
+    ''' parse a solution file into lists of action lists, and remainder string '''
+    s = re.sub(r'\s', '', s)
+    solution = []
+    try:
+        a, _ = parse_actions(s)
+        is_another_actions_list = bool(a)
+    except AttributeError:
+        is_another_actions_list = False
+    while is_another_actions_list:
+        a, s = parse_actions(s)
+        solution.append(a)
+        is_another_actions_list, s = maybe_consume_hash(s)
+    return solution, s
 
 
 def main(file='tests/test1.desc'):

@@ -4,8 +4,10 @@ import glob
 import unittest
 
 from icfp_parser import (
-    point_prog, parse_point, parse_map, parse_booster_code,
-    parse_booster_location, parse_obstacles, parse_boosters, parse_task
+    point_prog, act_b_prog,
+    parse_point, parse_map, parse_booster_code,
+    parse_booster_location, parse_obstacles, parse_boosters, parse_task,
+    parse_solution,
 )
 
 
@@ -95,6 +97,21 @@ class TestParser(unittest.TestCase):
             with open(filename) as f:
                 print(filename)
                 parse_task(f.read())
+
+    def test_act_b_prog(self):
+        a, b = act_b_prog.match(' B ( 1 , 2 )').groups()
+        self.assertEqual(int(a), 1)
+        self.assertEqual(int(b), 2)
+
+    def test_parse_solution(self):
+        sol, _ = parse_solution('W#A#S#D')
+        self.assertEqual(sol, [['W'], ['A'], ['S'], ['D']])
+
+    def test_parse_every_solution(self):
+        for filename in glob.glob('examples/*.sol'):
+            with open(filename) as f:
+                print(filename)
+                parse_solution(f.read())
 
 
 
