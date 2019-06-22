@@ -2,7 +2,7 @@
 
 import unittest
 
-from parser import point_prog, parse_point, parse_map
+from parser import point_prog, parse_point, parse_map, parse_booster_code
 
 
 class TestParser(unittest.TestCase):
@@ -35,6 +35,14 @@ class TestParser(unittest.TestCase):
 
     def test_parse_map(self):
         self.check_parse_map('(1,2),(3,4) # blah', [(1, 2), (3, 4)], '# blah')
+
+    def check_parse_booster(self, s, b, rem):
+        a, r = parse_booster_code(s)
+        self.assertEqual(b, a)
+        self.assertEqual(rem, r)
+
+    def test_parse_booster(self):
+        self.check_parse_booster(' B ABCDEF', 'B', 'ABCDEF')
 
 
 if __name__ == '__main__':
