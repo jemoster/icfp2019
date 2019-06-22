@@ -7,8 +7,9 @@ point_prog = re.compile(r'\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*')
 
 
 def parse_point(s):
-    pass
-
+    result = point_prog.match(s)
+    a, b = result.groups()
+    return int(a), int(b)
 
 
 def main(file='tests/test1.desc'):

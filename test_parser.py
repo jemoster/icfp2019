@@ -2,7 +2,7 @@
 
 import unittest
 
-from parser import point_prog
+from parser import point_prog, parse_point
 
 
 class TestParser(unittest.TestCase):
@@ -12,6 +12,7 @@ class TestParser(unittest.TestCase):
         a, b = result.groups()
         self.assertEqual(x, int(a))
         self.assertEqual(y, int(b))
+        self.assertEqual((x, y), parse_point(s))
 
 
     def test_point_prog(self):
