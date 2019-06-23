@@ -13,15 +13,6 @@ def map_size(map):
     return max(x), max(y)
 
 
-def draw_shape(data, poly, fill_value):
-    img = Image.fromarray(data)
-    draw = ImageDraw.Draw(img)
-    poly = [(p[1]*10, p[0]*10) for p in poly]
-    draw.polygon(poly, fill=fill_value)
-    new_data = np.asarray(img)
-    return new_data
-
-
 def save_image(mat, name, scale=255):
     new_im = Image.fromarray(mat * scale).transpose(Image.ROTATE_90)
     new_im.save("{}.png".format(name))
@@ -29,6 +20,14 @@ def save_image(mat, name, scale=255):
 
 def generate_maps(map_outline, obstacle_outine, boosters_list):
     map_dim = map_size(map_outline)
+
+    def draw_shape(data, poly, fill_value):
+        img = Image.fromarray(data)
+        draw = ImageDraw.Draw(img)
+        poly = [(p[1] * 10, p[0] * 10) for p in poly]
+        draw.polygon(poly, fill=fill_value)
+        new_data = np.asarray(img)
+        return new_data
 
     # Generate base map
     static_map = np.ones((map_dim[0]*10, map_dim[1]*10), dtype=np.uint8)
@@ -55,7 +54,10 @@ def generate_maps(map_outline, obstacle_outine, boosters_list):
     for booster_type, booster_pt in boosters_list:
         boosters[booster_type][booster_pt[0]][booster_pt[1]] = 1
 
-    return static_map, obstacles, boosters
+    # Generate to-be-filled map
+    unwrapped = ((obstacles + static_map) != 1).astype(np.uint8)
+
+    return static_map, obstacles, boosters, unwrapped
 
 
 def main(file):
@@ -63,11 +65,12 @@ def main(file):
         s = f.read()
     (map_outline, start, obstacle_outine, boosters_list), _ = parse_task(s)
 
-    static_map, obstacles, boosters = generate_maps(map_outline, obstacle_outine, boosters_list)
+    static_map, obstacles, boosters, unwrapped = generate_maps(map_outline, obstacle_outine, boosters_list)
 
     save_image(static_map, 'map')
     save_image(obstacles, 'obstacles')
     save_image(obstacles + static_map, 'filled')
+    save_image(unwrapped, 'unwrapped')
     for name, m in boosters.items():
         save_image(m, 'boosters-{}'.format(name))
 
