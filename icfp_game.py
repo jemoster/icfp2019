@@ -22,7 +22,7 @@ def draw_shape(data, poly, fill_value):
     return new_data
 
 
-def output(mat, name, scale=255):
+def save_image(mat, name, scale=255):
     new_im = Image.fromarray(mat * scale).transpose(Image.ROTATE_90)
     new_im.save("{}.png".format(name))
 
@@ -43,9 +43,17 @@ def generate_maps(map_outline, obstacle_outine, boosters_list):
     obstacles = obstacles[5::10, 5::10]
 
     # Generate booster map
-    boosters = np.zeros(map_dim, dtype=np.uint8)
+    boosters = {
+        'B': np.zeros(map_dim, dtype=np.uint8),
+        'F': np.zeros(map_dim, dtype=np.uint8),
+        'L': np.zeros(map_dim, dtype=np.uint8),
+        'X': np.zeros(map_dim, dtype=np.uint8),
+        'R': np.zeros(map_dim, dtype=np.uint8),
+        'C': np.zeros(map_dim, dtype=np.uint8),
+    }
+
     for booster_type, booster_pt in boosters_list:
-        boosters[booster_pt[0]][booster_pt[1]] = ord(booster_type)
+        boosters[booster_type][booster_pt[0]][booster_pt[1]] = 1
 
     return static_map, obstacles, boosters
 
@@ -57,10 +65,11 @@ def main(file):
 
     static_map, obstacles, boosters = generate_maps(map_outline, obstacle_outine, boosters_list)
 
-    output(static_map, 'map')
-    output(obstacles, 'obstacles')
-    output(obstacles + static_map, 'filled')
-    output(boosters, 'boosters', BOOSTER_SCALE)
+    save_image(static_map, 'map')
+    save_image(obstacles, 'obstacles')
+    save_image(obstacles + static_map, 'filled')
+    for name, m in boosters.items():
+        save_image(m, 'boosters-{}'.format(name))
 
 
 if __name__ == '__main__':
