@@ -16,7 +16,7 @@ def map_size(map):
 def draw_shape(data, poly, fill_value):
     img = Image.fromarray(data)
     draw = ImageDraw.Draw(img)
-    poly = [(p[1], p[0]) for p in poly]
+    poly = [(p[1]*10, p[0]*10) for p in poly]
     draw.polygon(poly, fill=fill_value)
     new_data = np.asarray(img)
     return new_data
@@ -31,14 +31,16 @@ def generate_maps(map_outline, obstacle_outine, boosters_list):
     map_dim = map_size(map_outline)
 
     # Generate base map
-    static_map = np.ones(map_dim, dtype=np.uint8)
+    static_map = np.ones((map_dim[0]*10, map_dim[1]*10), dtype=np.uint8)
     static_map = draw_shape(static_map, map_outline, 0)
+    static_map = static_map[5::10, 5::10]
 
     # Generate obstacle map
-    obstacles = np.zeros(map_dim, dtype=np.uint8)
+    obstacles = np.zeros((map_dim[0]*10, map_dim[1]*10), dtype=np.uint8)
     # obstacles = map
     for obstacle in obstacle_outine:
         obstacles = draw_shape(obstacles, obstacle, 1)
+    obstacles = obstacles[5::10, 5::10]
 
     # Generate booster map
     boosters = np.zeros(map_dim, dtype=np.uint8)
